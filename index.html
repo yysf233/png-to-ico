@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多图片转SVG工具</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #38a5f8;
+    }
+    #canvasContainer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    canvas {
+      border: 1px solid #ddd;
+      margin: 10px;
+    }
+    .slider-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .slider-container input[type="range"] {
+      width: 200px;
+    }
+    .slider-container span {
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #38a5f8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px;
+    }
+    button:hover {
+      background-color: #2f8cde;
+    }
+    .svgPreview {
+      margin: 20px 5px;
+      padding: 10px;
+      background-color: white;
+      display: inline-block;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>多图片转SVG工具</h1>
+  <p>上传多个图片，调整质量，生成SVG预览并下载。</p>
+
+  <div>
+    <input type="file" id="imageUpload" accept="image/*" multiple />
+    <div class="slider-container">
+      <span>质量：</span>
+      <input type="range" id="qualitySlider" min="0.1" max="1.0" step="0.1" value="0.5">
+      <span id="qualityValue">0.5</span>
+    </div>
+    <button id="convertToSVG">转换为SVG</button>
+  </div>
+
+  <div id="canvasContainer"></div>
+  <div id="svgPreviewContainer"></div>
+
+  <script>
+    const imageUpload = document.getElementById('imageUpload');
+    const qualitySlider = document.getElementById('qualitySlider');
+    const qualityValue = document.getElementById('qualityValue');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const convertToSVGButton = document.getElementById('convertToSVG');
+    const svgPreviewContainer = document.getElementById('svgPreviewContainer');
+
+    let uploadedImages = [];
+
+    // 实时更新质量值显示
+    qualitySlider.addEventListener('input', () => {
+      qualityValue.textContent = qualitySlider.value;
+    });
+
+    // 处理图片上传并显示到canvas
+    imageUpload.addEventListener('change', (event) => {
+      const files = event.target.files;
+      if (!files.length) return;
+
+      uploadedImages = []; // 清空之前的图片和预览
+      canvasContainer.innerHTML = '';
+      svgPreviewContainer.innerHTML = '';
+
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            canvasContainer.appendChild(canvas);
+            uploadedImages.push({ img, canvas });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // 转换所有canvas内容为SVG并展示
+    convertToSVGButton.addEventListener('click', () => {
+      if (!uploadedImages.length) {
+        alert('请先上传图片。');
+        return;
+      }
+
+      const quality = parseFloat(qualitySlider.value);
+      if (isNaN(quality) || quality <= 0 || quality > 1) {
+        alert('质量值无效，请调整滑动条。');
+        return;
+      }
+
+      svgPreviewContainer.innerHTML = ''; // 清空之前的SVG预览
+
+      uploadedImages.forEach(({ img, canvas }, index) => {
+        // 创建缩放后的canvas
+        const scaledCanvas = document.createElement('canvas');
+        scaledCanvas.width = canvas.width * quality;
+        scaledCanvas.height = canvas.height * quality;
+        const scaledCtx = scaledCanvas.getContext('2d');
+        scaledCtx.drawImage(img, 0, 0, scaledCanvas.width, scaledCanvas.height);
+
+        // 转换canvas为dataURL
+        const dataURL = scaledCanvas.toDataURL('image/png');
+
+        // 创建SVG内容
+        const svgContent = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="${scaledCanvas.width}" height="${scaledCanvas.height}">
+            <image href="${dataURL}" x="0" y="0" width="${scaledCanvas.width}" height="${scaledCanvas.height}" />
+          </svg>
+        `;
+
+        // 创建SVG预览
+        const svgPreview = document.createElement('div');
+        svgPreview.className = 'svgPreview';
+        svgPreview.innerHTML = svgContent;
+
+        // 创建下载按钮
+        const downloadButton = document.createElement('button');
+        downloadButton.textContent = `下载SVG ${index + 1}`;
+        downloadButton.addEventListener('click', () => {
+          const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `converted_image_${index + 1}.svg`;
+          a.click();
+
+          URL.revokeObjectURL(url);
+        });
+
+        svgPreview.appendChild(downloadButton);
+        svgPreviewContainer.appendChild(svgPreview);
+      });
+    });
+  </script>
+</body>
+</html>
