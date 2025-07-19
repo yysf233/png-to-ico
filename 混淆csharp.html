@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>代码保护处理工具</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 10px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .option-item {
+            display: flex;
+            align-items: center;
+        }
+        .option-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .info-box {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>代码保护处理工具</h1>
+        
+        <div class="info-box">
+            <p>此工具提供基本的代码混淆和加密功能，可帮助保护您的C#代码不被轻易反编译。</p>
+            <p>使用方法：粘贴代码到输入框，选择处理选项，然后点击处理按钮。</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('process')">代码处理</div>
+            <div class="tab" onclick="switchTab('settings')">设置</div>
+            <div class="tab" onclick="switchTab('help')">帮助</div>
+        </div>
+
+        <div id="process" class="tab-content active">
+            <div class="section">
+                <h3>原始代码</h3>
+                <textarea id="inputCode" placeholder="请在此粘贴您的C#代码..."></textarea>
+            </div>
+
+            <div class="options">
+                <div class="option-item">
+                    <input type="checkbox" id="obfuscateNames" checked>
+                    <label for="obfuscateNames">混淆标识符名称</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="encryptStrings" checked>
+                    <label for="encryptStrings">加密字符串</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="addAntiDebug" checked>
+                    <label for="addAntiDebug">添加反调试代码</label>
+                </div>
+                <div class="option-item">
+                    <input type="checkbox" id="minifyCode">
+                    <label for="minifyCode">简化代码</label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="processCode()">处理代码</button>
+                <button onclick="copyOutput()">复制结果</button>
+                <button onclick="clearAll()">清空</button>
+            </div>
+
+            <div class="status" id="status"></div>
+
+            <div class="section">
+                <h3>处理后的代码</h3>
+                <textarea id="outputCode" readonly placeholder="处理后的代码将显示在这里..."></textarea>
+            </div>
+        </div>
+
+        <div id="settings" class="tab-content">
+            <div class="section">
+                <h3>设置选项</h3>
+                <div class="option-item">
+                    <input type="checkbox" id="autoCopy" checked>
+                    <label for="autoCopy">处理后自动复制结果</label>
+                </div>
+                <div class="option-item">
+                    <label for="encryptionKey">加密密钥：</label>
+                    <input type="text" id="encryptionKey" value="B3C4D5E6F7G8H9I0J1K2L3M4N5O6P7Q">
+                </div>
+            </div>
+        </div>
+
+        <div id="help" class="tab-content">
+            <div class="section">
+                <h3>使用帮助</h3>
+                <p><strong>混淆标识符名称：</strong> 将类名、方法名和变量名替换为随机字符串。</p>
+                <p><strong>加密字符串：</strong> 对代码中的字符串进行加密处理，运行时解密。</p>
+                <p><strong>添加反调试代码：</strong> 插入检测调试器和反编译工具的代码。</p>
+                <p><strong>简化代码：</strong> 移除不必要的空格和注释，使代码更紧凑。</p>
+                <p><strong>注意事项：</strong> 此工具提供基本保护，专业环境建议使用商业混淆工具。</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换标签页
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // UTF-8安全的Base64编码
+        function utf8ToBase64(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+                return String.fromCharCode('0x' + p1);
+            }));
+        }
+
+        // UTF-8安全的Base64解码
+        function base64ToUtf8(str) {
+            return decodeURIComponent(atob(str).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+        }
+
+        // 生成随机标识符
+        function generateRandomName() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            const length = 5 + Math.floor(Math.random() * 5);
+            
+            // 首字符必须是字母
+            result += chars.charAt(Math.floor(Math.random() * 52));
+            
+            for (let i = 1; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            return result;
+        }
+
+        // 加密字符串 (模拟实现)
+        function encryptString(text, key) {
+            // 使用UTF-8安全的Base64编码
+            return 'U2FsdGVkX1' + utf8ToBase64(text.split('').reverse().join(''));
+        }
+
+        // 解密字符串 (模拟实现)
+        function decryptString(encrypted, key) {
+            try {
+                if (!encrypted.startsWith('U2FsdGVkX1')) {
+                    return encrypted; // 不是加密字符串，原样返回
+                }
+                const text = base64ToUtf8(encrypted.substring(10)).split('').reverse().join('');
+                return text;
+            } catch {
+                return '';
+            }
+        }
+
+        // 处理代码
+        function processCode() {
+            const inputCode = document.getElementById('inputCode').value;
+            if (!inputCode.trim()) {
+                updateStatus('请输入要处理的代码', 'error');
+                return;
+            }
+
+            updateStatus('正在处理代码...', 'processing');
+
+            // 使用setTimeout让UI有机会更新
+            setTimeout(() => {
+                try {
+                    let output = inputCode;
+                    const obfuscateNames = document.getElementById('obfuscateNames').checked;
+                    const encryptStrings = document.getElementById('encryptStrings').checked;
+                    const addAntiDebug = document.getElementById('addAntiDebug').checked;
+                    const minifyCode = document.getElementById('minifyCode').checked;
+                    const encryptionKey = document.getElementById('encryptionKey').value;
+
+                    // 混淆标识符名称
+                    if (obfuscateNames) {
+                        const identifierMap = {};
+                        const regex = /(?:class|interface|struct|enum|delegate)\s+([a-zA-Z_][a-zA-Z0-9_]*)|(?:var|let|const)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*[=;]|function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(|(?:public|private|protected|internal)\s+(?:static\s+)?(?:readonly\s+)?([a-zA-Z_][a-zA-Z0-9_]*)\s+([a-zA-Z_][a-zA-Z0-9_]*)/g;
+                        
+                        let match;
+                        while ((match = regex.exec(output)) !== null) {
+                            for (let i = 1; i <= 5; i++) {
+                                if (match[i] && !identifierMap[match[i]]) {
+                                    identifierMap[match[i]] = generateRandomName();
+                                }
+                            }
+                        }
+
+                        // 替换标识符
+                        for (const [original, replacement] of Object.entries(identifierMap)) {
+                            const regex = new RegExp(`\\b${original}\\b`, 'g');
+                            output = output.replace(regex, replacement);
+                        }
+                    }
+
+                    // 加密字符串
+                    if (encryptStrings) {
+                        // 改进的字符串匹配正则，能正确处理转义字符
+                        const stringRegex = /"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g;
+                        output = output.replace(stringRegex, match => {
+                            if (match.length <= 2) return match; // 空字符串
+                            
+                            // 处理转义字符
+                            const content = match.substring(1, match.length - 1);
+                            return `DecryptString("${encryptString(content, encryptionKey)}", "${encryptionKey}")`;
+                        });
+                    }
+
+                    // 添加反调试代码
+                    if (addAntiDebug) {
+                        const antiDebugCode = `
+// 反调试代码
+if (System.Diagnostics.Debugger.IsAttached)
+{
+    Environment.Exit(0);
+}
+
+// 检测反编译工具
+foreach (Process process in Process.GetProcesses())
+{
+    string processName = process.ProcessName.ToLower();
+    if (processName.Contains("de4dot") || processName.Contains("ilspy") || 
+        processName.Contains("reflector") || processName.Contains("dnspy"))
+    {
+        Environment.Exit(0);
+    }
+}
+`;
+                        // 插入到类开始处
+                        const classIndex = output.indexOf('class');
+                        if (classIndex !== -1) {
+                            const braceIndex = output.indexOf('{', classIndex);
+                            if (braceIndex !== -1) {
+                                output = output.substring(0, braceIndex + 1) + antiDebugCode + output.substring(braceIndex + 1);
+                            }
+                        }
+                    }
+
+                    // 简化代码
+                    if (minifyCode) {
+                        // 移除单行注释
+                        output = output.replace(/\/\/.*$/gm, '');
+                        // 移除多行注释
+                        output = output.replace(/\/\*[\s\S]*?\*\//g, '');
+                        // 移除多余的空格和换行
+                        output = output.replace(/\s+/g, ' ').replace(/\s*([{}();,=+-/*])\s*/g, '$1');
+                    }
+
+                    document.getElementById('outputCode').value = output;
+                    updateStatus('代码处理完成', 'success');
+
+                    // 自动复制
+                    if (document.getElementById('autoCopy').checked) {
+                        copyOutput();
+                    }
+                } catch (error) {
+                    updateStatus(`处理出错: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            }, 100);
+        }
+
+        // 复制输出结果
+        function copyOutput() {
+            const output = document.getElementById('outputCode');
+            output.select();
+            document.execCommand('copy');
+            updateStatus('已复制到剪贴板', 'success');
+        }
+
+        // 清空所有
+        function clearAll() {
+            document.getElementById('inputCode').value = '';
+            document.getElementById('outputCode').value = '';
+            updateStatus('已清空', 'info');
+        }
+
+        // 更新状态信息
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.style.color = 
+                type === 'error' ? '#e74c3c' : 
+                type === 'success' ? '#27ae60' : 
+                type === 'processing' ? '#3498db' : '#7f8c8d';
+        }
+    </script>
+</body>
+</html>
